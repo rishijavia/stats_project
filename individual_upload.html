@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<head>
+	<style>
+
+	.axis {
+	  font: 10px sans-serif;
+	}
+
+	.axis path,
+	.axis line {
+	  fill: none;
+	  stroke: #000;
+	  shape-rendering: crispEdges;
+	}
+
+	</style>
+</head>
+
+<body>
+	<select id="buildings">
+	  <option value="0">Miller</option>
+	  <option value="1">Copeland</option>
+	  <option value="2">Holmes</option>
+	  <option value="3">Howard</option>
+	</select>
+	<br />
+
+<script src="https://d3js.org/d3.v3.min.js"></script>
+<script src="mean_hourly_upload.js"></script>
+<script>
+
+document.getElementById("buildings").addEventListener("change", changeBuildings);
+
+function changeBuildings(){
+	d3.select("svg").remove();
+	drawGraph(parseInt(this.value));
+}
+
+function drawGraph(building){
+	// sorted as miller, copeland, holmes, howard
+	var data = download[building]
+
+	var margin = {top: 20, right: 20, bottom: 70, left: 40},
+	    width = 1500 - margin.left - margin.right,
+	    height = 900 - margin.top - margin.bottom;
+
+	var x = d3.scale.ordinal().rangeRoundBands([0, width], .05);
+
+	var y = d3.scale.linear().range([height, 0]);
+
+
+	var svg = d3.select("body").append("svg")
+	    .attr("width", width + margin.left + margin.right)
+	    .attr("height", height + margin.top + margin.bottom)
+	  .append("g")
+	    .attr("transform",
+	          "translate(" + margin.left + "," + margin.top + ")");
+
+
+	x.domain(data.map(function(d, i) { return i; }));
+	y.domain([0, d3.max(data, function(d) { return d/1000; })]);
+	var maxValue = d3.max(data, function(d) { return d/1000; });
+
+	var xAxis = d3.svg.axis()
+	.scale(x)
+	.orient("bottom")
+
+	var yAxis = d3.svg.axis()
+	.scale(y)
+	.orient("left")
+	.ticks(9);
+
+	svg.append("g")
+	    .attr("class", "x axis")
+	    .attr("transform", "translate(0," + height + ")")
+	    .call(xAxis)
+	  .selectAll("text")
+	    .style("text-anchor", "end")
+	    .attr("dx", "-.8em")
+	    .attr("dy", "-.55em")
+	    .attr("transform", "rotate(-90)" );
+
+	svg.append("g")
+	    .attr("class", "y axis")
+	    .call(yAxis)
+	  .append("text")
+	    .attr("transform", "rotate(-90)")
+	    .attr("y", 6)
+	    .attr("dy", ".71em")
+	    .style("text-anchor", "end")
+	    .text("Internet Speed (bits/sec)");
+
+	svg.selectAll("bar")
+	    .data(data)
+	  .enter().append("rect")
+	    .style("fill", "steelblue")
+	    .attr("x", function(d, i) { return x(i); })
+	    .attr("width", x.rangeBand())
+	    .attr("y", function(d) { return y(d/1000); })
+	    .attr("height", function(d) { return height - y(d/1000); });
+}
+
+drawGraph(0);
+</script>
+
+</body>
